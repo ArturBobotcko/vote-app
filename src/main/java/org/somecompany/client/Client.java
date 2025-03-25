@@ -9,6 +9,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 
 public class Client {
     public void start(String host, final int portNumber) throws Exception {
@@ -21,11 +24,16 @@ public class Client {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline p = ch.pipeline();
-                    p.addLast(new ClientHandler());
+                    p.addLast(new LineBasedFrameDecoder(1024))
+                     .addLast(new StringDecoder())
+                     .addLast(new StringEncoder())
+                     .addLast(new ClientHandler());
                 }
              });
 
+            System.out.println("Connecting to server at " + host + ":" + portNumber);
             ChannelFuture f = b.connect(host, portNumber).sync();
+            System.out.println("Connected to server!");
 
             f.channel().closeFuture().sync();
         } finally {

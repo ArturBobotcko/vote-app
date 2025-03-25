@@ -9,6 +9,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -27,10 +30,15 @@ public class Server {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline p = ch.pipeline();
-                    p.addLast(serverHandler);
+                    p.addLast(new LineBasedFrameDecoder(1024))
+                     .addLast(new StringDecoder())
+                     .addLast(new StringEncoder())
+                     .addLast(serverHandler);
+                     
                 }
              });
 
+            System.out.println("Server started on port " + portNumber);
             ChannelFuture f = b.bind(portNumber).sync();
 
             f.channel().closeFuture().sync();
