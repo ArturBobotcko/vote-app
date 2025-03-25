@@ -39,14 +39,20 @@ public class Server {
         }
     }
 
+    /**
+     * Start a server
+     */
     public void start() throws Exception {
         EventLoopGroup serverGroup = new NioEventLoopGroup(1);
         EventLoopGroup clients = new NioEventLoopGroup();
-        ServerHandler serverHandler = new ServerHandler();
         try {
             ServerBootstrap b = new ServerBootstrap();
-            b.group(serverGroup, clients) 
+            b.group(serverGroup, clients)
+
+             // Server socket
              .channel(NioServerSocketChannel.class)
+
+             // Server address with provided port
              .localAddress(new InetSocketAddress(port))
              .handler(new LoggingHandler(LogLevel.INFO))
              .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -56,7 +62,7 @@ public class Server {
                     p.addLast(new LineBasedFrameDecoder(1024))
                      .addLast(new StringDecoder())
                      .addLast(new StringEncoder())
-                     .addLast(serverHandler);
+                     .addLast(new ServerHandler());
                      
                 }
              });

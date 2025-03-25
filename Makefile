@@ -3,7 +3,7 @@
 # Define variables
 MAVEN = mvn
 MAIN_SERVER = org.somecompany.server.Server
-MAIN_CLIENT = org.somecompany.client.Client
+MAIN_CLIENT = org.somecompany.client.ClientSocket
 SERVER_PORT = 8080
 CLIENT_HOST = localhost
 CLIENT_PORT = 8080

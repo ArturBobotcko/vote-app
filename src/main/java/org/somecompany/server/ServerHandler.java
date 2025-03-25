@@ -5,31 +5,68 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.somecompany.exceptions.UsernameTakenException;
+import org.somecompany.client.Client;
+
+/**
+ * @Sharable means that handler supports multiple connections
+ */
 @Sharable
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
-    private static final Set<Channel> channels = new HashSet<>();
-    
+    private static final Map<Channel, Client> clients = new ConcurrentHashMap<>();
+
+    /**
+     * Fires when client's connection is established
+     */
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         System.out.println("Client connected: " + ctx.channel().remoteAddress());
-        channels.add(ctx.channel());
+        handleConnection(ctx.channel());
+    }
+
+    public void handleConnection(Channel channel) {
+        clients.put(channel, new Client());
+        System.out.println(clients.get(channel).getUsername());
     }
     
+    /**
+     * Fires when client disconnects from server
+     */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         System.out.println("Client disconnected: " + ctx.channel().remoteAddress());
-        channels.remove(ctx.channel());
+        clients.remove(ctx.channel());
     }
     
+    /**
+     * Called when server receive a message from client
+     */
     @Override
     public void channelRead0(ChannelHandlerContext ctx, String msg) {
-        System.out.println("Message from " + ctx.channel().remoteAddress() + ": " + msg);
+        if (msg.equals("exit")) {
+            ctx.writeAndFlush("You have disconnected\n");
+            ctx.disconnect();
+            return;
+        }
+
+        System.out.println("Message from " + ctx.channel().remoteAddress() + " (" + clients.get(ctx.channel()).getUsername() + "): " + msg);
+    }
+
+    /**
+     * Handle login logic: search if user name is taken
+     */
+    public void handleLogin(Channel channel, String username) throws UsernameTakenException {
+        for (Client client : clients.values()) {
+            if (client.getUsername().equals(username)) {
+                throw new UsernameTakenException("This username is already taken");
+            }
+        }
         
-        // Echo back to the client
-        ctx.writeAndFlush("Server received: " + msg + "\n");
+        Client client = clients.get(channel);
+        client.login(username);
     }
 
     @Override

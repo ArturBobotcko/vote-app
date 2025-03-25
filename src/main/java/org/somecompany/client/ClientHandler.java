@@ -7,10 +7,16 @@ import io.netty.channel.ChannelPromise;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+/**
+ * Handler with specified String type of messages
+ */
 public class ClientHandler extends SimpleChannelInboundHandler<String> {
     private ChannelHandlerContext ctx;
     private BufferedReader clientCommandReader;
 
+    /**
+     * Fires when connection is established
+     */
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         this.ctx = ctx;
@@ -20,11 +26,17 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
         new Thread(this::sendToServer).start();
     }
 
+    /**
+     * Called when client gets a message from the server
+     */
     @Override
     public void channelRead0(ChannelHandlerContext ctx, String msg) {
-        System.out.println("Received: " + msg);
+        System.out.println(msg);
     }
 
+    /**
+     * Sending client's input to the server
+     */
     private void sendToServer() {
         try {
             System.out.println("Type messages to send to server (press Enter after each message):");
