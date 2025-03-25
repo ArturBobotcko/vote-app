@@ -13,13 +13,39 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 
+import java.net.InetSocketAddress;
+
 public class Client {
-    public void start(String host, final int portNumber) throws Exception {
+    private final String host;
+    private final int port;
+
+    public Client(final String host, final int port) {
+        this.host = host;
+        this.port = port;
+    }
+
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            System.err.println("Usage: " + Client.class.getSimpleName() + " <host> <port>");
+            return;
+        }
+
+        try {
+            String host = args[0];
+            int port = Integer.parseInt(args[1]);
+            new Client(host, port).start();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void start() throws Exception {
         EventLoopGroup clientGroup = new NioEventLoopGroup();
         try {
             Bootstrap b = new Bootstrap();
             b.group(clientGroup)
              .channel(NioSocketChannel.class)
+             .remoteAddress(new InetSocketAddress(host, port))
              .handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) throws Exception {
@@ -31,8 +57,8 @@ public class Client {
                 }
              });
 
-            System.out.println("Connecting to server at " + host + ":" + portNumber);
-            ChannelFuture f = b.connect(host, portNumber).sync();
+            System.out.println("Connecting to server at " + host + ":" + port);
+            ChannelFuture f = b.connect(host, port).sync();
             System.out.println("Connected to server!");
 
             f.channel().closeFuture().sync();

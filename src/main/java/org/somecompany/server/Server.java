@@ -16,8 +16,30 @@ import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
+import java.net.InetSocketAddress;
+
 public class Server {
-    public void start(final int portNumber) throws Exception {
+    private final int port;
+
+    public Server(final int port) {
+        this.port = port;
+    }
+
+    public static void main(String[] args) {    
+        if (args.length != 1) {
+            System.err.println("Usage: " + Server.class.getSimpleName() + " <port>");
+            return;
+        }
+
+        try {
+            int port = Integer.parseInt(args[0]);
+            new Server(port).start();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void start() throws Exception {
         EventLoopGroup serverGroup = new NioEventLoopGroup(1);
         EventLoopGroup clients = new NioEventLoopGroup();
         ServerHandler serverHandler = new ServerHandler();
@@ -25,6 +47,7 @@ public class Server {
             ServerBootstrap b = new ServerBootstrap();
             b.group(serverGroup, clients) 
              .channel(NioServerSocketChannel.class)
+             .localAddress(new InetSocketAddress(port))
              .handler(new LoggingHandler(LogLevel.INFO))
              .childHandler(new ChannelInitializer<SocketChannel>() {
                 @Override
@@ -38,8 +61,8 @@ public class Server {
                 }
              });
 
-            System.out.println("Server started on port " + portNumber);
-            ChannelFuture f = b.bind(portNumber).sync();
+            System.out.println("Server started on port " + port);
+            ChannelFuture f = b.bind(port).sync();
 
             f.channel().closeFuture().sync();
         } finally {
