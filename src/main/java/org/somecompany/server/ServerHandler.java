@@ -15,6 +15,8 @@ import org.somecompany.client.Client;
 import picocli.CommandLine;
 import org.somecompany.commands.CommandRegister;
 import org.somecompany.commands.auth.LoginCommand;
+import org.somecompany.commands.topic.CreateTopicCommand;
+import org.somecompany.commands.vote.CreateVoteCommand;
 
 /**
  * @Sharable means that handler supports multiple connections
@@ -29,6 +31,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     public ServerHandler() {
         commandRegister.register(new LoginCommand(this));
+        commandRegister.register(new CreateTopicCommand(this));
+        commandRegister.register(new CreateVoteCommand(this));
     }
 
     /**
@@ -67,16 +71,45 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     public void channelRead0(ChannelHandlerContext ctx, String msg) {
         if (msg.equals("exit")) {
             handleDisconnect(ctx);
-            return;
+            System.exit(0);
         }
-        
-        String[] commandParsed = msg.split("\\s+");
-        String[] args = new String[commandParsed.length - 1];
-        System.arraycopy(commandParsed, 1, args, 0, commandParsed.length - 1);
 
-        commandRegister.execute(ctx, commandParsed[0], args);
-        
-        System.out.println("Message from " + ctx.channel().remoteAddress() + " (" + clients.get(ctx.channel()).getUsername() + "): " + msg);
+        /**
+         * Parse user input
+         */
+        if (getCurrentClient(ctx).isLoggedIn() || msg.contains("login")) {
+            int dashIndex = msg.indexOf('-');
+            String commandName;
+            String[] commandArgs;
+
+            if (dashIndex == -1) {  // Если нет флагов
+                commandName = msg.trim();
+                commandArgs = new String[0];  // Пустой массив аргументов
+            } else {  // Если есть флаги
+                commandName = msg.substring(0, dashIndex).trim();
+                commandArgs = msg.substring(dashIndex).trim().split("\\s+");
+            }
+
+            commandRegister.execute(ctx, commandName, commandArgs);
+        } else {
+            ctx.writeAndFlush("You have to login first\n");
+        }
+
+        System.out.println("Message from " + ctx.channel().remoteAddress() + " (" + getCurrentUsername(ctx) + "): " + msg);
+    }
+
+    /**
+     * Get Client object by context
+     */
+    public Client getCurrentClient(ChannelHandlerContext ctx) {
+        return clients.get(ctx.channel());
+    }
+
+    /**
+     * Get Client username by context
+     */
+    public String getCurrentUsername(ChannelHandlerContext ctx) {
+        return getCurrentClient(ctx).getUsername();
     }
 
     /**
