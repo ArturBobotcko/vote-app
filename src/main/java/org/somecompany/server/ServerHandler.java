@@ -4,6 +4,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler.Sharable;
+import io.netty.channel.ChannelFutureListener;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +21,7 @@ import org.somecompany.commands.auth.LoginCommand;
  */
 @Sharable
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
-    private static final Map<Channel, Client> clients = new ConcurrentHashMap<>();
+    private final Map<Channel, Client> clients = new ConcurrentHashMap<>();
     private final CommandRegister commandRegister = new CommandRegister();
 
     /**
@@ -36,12 +37,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         System.out.println("Client connected: " + ctx.channel().remoteAddress());
-        handleConnection(ctx.channel());
-    }
 
-    public void handleConnection(Channel channel) {
-        clients.put(channel, new Client());
-        System.out.println(clients.get(channel).getUsername());
+        ctx.writeAndFlush("You are connected!\n");
+        ctx.writeAndFlush("Type messages to send to server (press Enter after each message):\n");
+        clients.put(ctx.channel(), new Client());
     }
     
     /**
@@ -50,7 +49,15 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         System.out.println("Client disconnected: " + ctx.channel().remoteAddress());
+
+        handleDisconnect(ctx);
+    }
+
+    private void handleDisconnect(ChannelHandlerContext ctx) {
         clients.remove(ctx.channel());
+        ctx.writeAndFlush("You have been disconnected\n")
+            .addListener(ChannelFutureListener.CLOSE);
+        ctx.close();
     }
     
     /**
@@ -59,8 +66,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelRead0(ChannelHandlerContext ctx, String msg) {
         if (msg.equals("exit")) {
-            ctx.writeAndFlush("You have disconnected\n");
-            ctx.disconnect();
+            handleDisconnect(ctx);
             return;
         }
         
@@ -91,5 +97,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    public Map<Channel,Client> getClients() {
+        return clients;
     }
 }

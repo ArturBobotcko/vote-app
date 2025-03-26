@@ -44,4 +44,11 @@ public class CommandRegister {
             ctx.writeAndFlush("Unknown command: " + commandName + "\n");
         }
     }
+
+    /**
+     * Get the map of commands
+     */
+    public Map<String, CommandInterface> getCommands() {
+        return commands;
+    }
 }

@@ -63,7 +63,6 @@ public class ClientSocket {
             
             // Connect to the server
             ChannelFuture f = b.connect().sync();
-            System.out.println("Connected to server!");
 
             f.channel().closeFuture().sync();
         } finally {

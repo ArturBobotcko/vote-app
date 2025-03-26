@@ -39,7 +39,6 @@ public class ClientHandler extends SimpleChannelInboundHandler<String> {
      */
     private void sendToServer() {
         try {
-            System.out.println("Type messages to send to server (press Enter after each message):");
             while(true) {
                 String command = clientCommandReader.readLine();
                 if (command != null && ctx.channel().isActive()) {
