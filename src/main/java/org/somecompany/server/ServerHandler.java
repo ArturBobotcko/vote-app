@@ -27,7 +27,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      * Register every command
      */
     public ServerHandler() {
-        commandRegister.register(new LoginCommand());
+        commandRegister.register(new LoginCommand(this));
     }
 
     /**

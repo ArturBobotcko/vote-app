@@ -25,15 +25,16 @@ public class LoginCommandCli implements Runnable {
     private String username;
     
     private ChannelHandlerContext ctx;
+    private ServerHandler serverHandler;
     
-    public LoginCommandCli(ChannelHandlerContext ctx) {
+    public LoginCommandCli(ChannelHandlerContext ctx, ServerHandler serverHandler) {
         this.ctx = ctx;
+        this.serverHandler = serverHandler;
     }
 
     @Override
     public void run() {
         try {
-            ServerHandler serverHandler = (ServerHandler) ctx.pipeline().get("serverHandler");
             serverHandler.handleLogin(ctx.channel(), username);
             ctx.writeAndFlush("Login successful as: " + username + "\n");
         } catch (UsernameTakenException e) {
