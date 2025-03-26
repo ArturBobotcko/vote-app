@@ -68,4 +68,16 @@ public class ServerHandlerTest {
 
         assertEquals("Login successful as: username1\n", msg);
     }
+
+    @Test
+    public void clientCreateTopicTest() {
+        channel.outboundMessages().clear();
+        
+        channel.writeInbound("login -u=username1");
+        channel.writeInbound("create topic -n=topic1");
+
+        // String msg = channel.readOutbound();
+
+        // assertEquals("Login successful as: username1\n", msg);
+    }
 }

@@ -39,7 +39,7 @@ public class CreateVoteCommandCli implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("CREATED VOTE");
+        
     }
 
     public String getTopicName() {
