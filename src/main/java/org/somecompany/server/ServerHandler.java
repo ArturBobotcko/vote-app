@@ -11,12 +11,24 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.somecompany.exceptions.UsernameTakenException;
 import org.somecompany.client.Client;
 
+import picocli.CommandLine;
+import org.somecompany.commands.CommandRegister;
+import org.somecompany.commands.auth.LoginCommand;
+
 /**
  * @Sharable means that handler supports multiple connections
  */
 @Sharable
 public class ServerHandler extends SimpleChannelInboundHandler<String> {
     private static final Map<Channel, Client> clients = new ConcurrentHashMap<>();
+    private final CommandRegister commandRegister = new CommandRegister();
+
+    /**
+     * Register every command
+     */
+    public ServerHandler() {
+        commandRegister.register(new LoginCommand());
+    }
 
     /**
      * Fires when client's connection is established
@@ -51,7 +63,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
             ctx.disconnect();
             return;
         }
+        
+        String[] commandParsed = msg.split("\\s+");
+        String[] args = new String[commandParsed.length - 1];
+        System.arraycopy(commandParsed, 1, args, 0, commandParsed.length - 1);
 
+        commandRegister.execute(ctx, commandParsed[0], args);
+        
         System.out.println("Message from " + ctx.channel().remoteAddress() + " (" + clients.get(ctx.channel()).getUsername() + "): " + msg);
     }
 
