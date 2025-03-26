@@ -10,4 +10,10 @@ import io.netty.channel.ChannelHandlerContext;
  */
 public interface CommandInterface {
     void execute(ChannelHandlerContext ctx, String[] args);
+    
+    /**
+     * Returns the class that contains the Picocli Command annotation
+     * This allows separating the command registration from the CLI implementation
+     */
+    Class<?> getCommandClass();
 }

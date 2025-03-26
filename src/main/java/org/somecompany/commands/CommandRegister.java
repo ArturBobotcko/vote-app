@@ -3,6 +3,8 @@ package org.somecompany.commands;
 import io.netty.channel.ChannelHandlerContext;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.StringWriter;
+import java.io.PrintWriter;
 
 import picocli.CommandLine;
 import org.somecompany.commands.CommandInterface;
@@ -18,7 +20,8 @@ public class CommandRegister {
      * Register a command with provided name and Command oject
      */
     public void register(CommandInterface command) {
-        CommandLine.Command annotation = command.getClass()
+        Class<?> commandClass = command.getCommandClass();
+        CommandLine.Command annotation = commandClass
             .getAnnotation(CommandLine.Command.class);
         
         if (annotation == null) {

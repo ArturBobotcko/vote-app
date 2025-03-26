@@ -1,18 +1,10 @@
 package org.somecompany.commands.auth;
 
-import org.somecompany.commands.CommandInterface;
+import org.somecompany.commands.BaseCommand;
 import io.netty.channel.ChannelHandlerContext;
 import org.somecompany.server.ServerHandler;
 
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-
-@Command(
-    name = "login",
-    description = "Log in to the server",
-    mixinStandardHelpOptions = true
-)
-public class LoginCommand implements CommandInterface {
+public class LoginCommand extends BaseCommand {
     private final ServerHandler serverHandler;
 
     public LoginCommand(ServerHandler serverHandler) {
@@ -20,7 +12,12 @@ public class LoginCommand implements CommandInterface {
     }
 
     @Override
-    public void execute(ChannelHandlerContext ctx, String[] args) {
-        new CommandLine(new LoginCommandCli(ctx, serverHandler)).execute(args);
+    protected Object createCommandInstance(ChannelHandlerContext ctx) {
+        return new LoginCommandCli(ctx, serverHandler);
+    }
+    
+    @Override
+    public Class<?> getCommandClass() {
+        return LoginCommandCli.class;
     }
 }

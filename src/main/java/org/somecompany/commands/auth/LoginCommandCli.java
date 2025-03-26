@@ -16,6 +16,11 @@ import org.somecompany.exceptions.UsernameTakenException;
  * 
  * Provides a 'login' command for client
  */
+@Command(
+    name = "login",
+    description = "Log in to the server",
+    mixinStandardHelpOptions = true
+)
 public class LoginCommandCli implements Runnable {
     @Option(
         names = "-u",
