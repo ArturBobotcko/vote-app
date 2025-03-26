@@ -8,6 +8,7 @@ import java.io.PrintWriter;
 
 import picocli.CommandLine;
 import org.somecompany.commands.CommandInterface;
+import org.somecompany.exceptions.UnknownCommandException;
 
 
 /**
@@ -36,13 +37,12 @@ public class CommandRegister {
     /**
      * Execute a specified command with arguments
      */
-    public void execute(ChannelHandlerContext ctx, String commandName, String[] args) {
+    public void execute(ChannelHandlerContext ctx, String commandName, String[] args) throws UnknownCommandException {
         CommandInterface command = commands.get(commandName);
-        if (command != null) {
-            command.execute(ctx, args);
-        } else {
-            ctx.writeAndFlush("Unknown command: " + commandName + "\n");
+        if (command == null) {
+            throw new UnknownCommandException("Unknown command: " + commandName);
         }
+        command.execute(ctx, args);
     }
 
     /**

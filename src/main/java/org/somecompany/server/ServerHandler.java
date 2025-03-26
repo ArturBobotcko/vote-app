@@ -18,6 +18,10 @@ import org.somecompany.commands.auth.LoginCommand;
 import org.somecompany.commands.topic.CreateTopicCommand;
 import org.somecompany.commands.vote.CreateVoteCommand;
 
+import org.somecompany.util.LoggerUtil;
+
+import org.somecompany.exceptions.UnknownCommandException;
+
 /**
  * @Sharable means that handler supports multiple connections
  */
@@ -40,7 +44,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        System.out.println("Client connected: " + ctx.channel().remoteAddress());
+        LoggerUtil.info("Client connected: " + ctx.channel().remoteAddress());
 
         ctx.writeAndFlush("You are connected!\n");
         ctx.writeAndFlush("Type messages to send to server (press Enter after each message):\n");
@@ -52,7 +56,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
      */
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        System.out.println("Client disconnected: " + ctx.channel().remoteAddress());
+        LoggerUtil.info("Client disconnected: " + ctx.channel().remoteAddress());
 
         handleDisconnect(ctx);
     }
@@ -71,11 +75,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
     public void channelRead0(ChannelHandlerContext ctx, String msg) {
         if (msg.equals("exit")) {
             handleDisconnect(ctx);
-            System.exit(0);
+            return;
         }
 
         /**
-         * Parse user input
+         * Parse user input.
+         * 
+         * If not logged in, commands aren't available
          */
         if (getCurrentClient(ctx).isLoggedIn() || msg.contains("login")) {
             int dashIndex = msg.indexOf('-');
@@ -90,12 +96,19 @@ public class ServerHandler extends SimpleChannelInboundHandler<String> {
                 commandArgs = msg.substring(dashIndex).trim().split("\\s+");
             }
 
-            commandRegister.execute(ctx, commandName, commandArgs);
+            try {
+                commandRegister.execute(ctx, commandName, commandArgs);
+                LoggerUtil.info("Message from " + ctx.channel().remoteAddress() + " (" + getCurrentUsername(ctx) + "): " + msg);
+            } catch (UnknownCommandException e) {
+                ctx.writeAndFlush(e.getMessage() + "\n");
+                LoggerUtil.error(e.getMessage());
+            }
         } else {
             ctx.writeAndFlush("You have to login first\n");
         }
 
-        System.out.println("Message from " + ctx.channel().remoteAddress() + " (" + getCurrentUsername(ctx) + "): " + msg);
+        // System.out.println("Message from " + ctx.channel().remoteAddress() + " (" + getCurrentUsername(ctx) + "): " + msg);
+        
     }
 
     /**
